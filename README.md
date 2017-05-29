@@ -6,7 +6,7 @@ Rate My PSU is a Google Chrome extension that puts RateMyProfessors ratings dire
 
 ![Alt text](http://i.imgur.com/cax5qFl.png)
 # Chrome Web Store
-The extension can be downloaded on the Chrome Web Store <a href="">here</a>.
+The extension can be downloaded on the Chrome Web Store <a href="https://chrome.google.com/webstore/detail/rate-my-psu/nlcafldllepmhflgokmeahkheimdmojf?authuser=1">here</a>.
 # Changelog
 * 1.0   - Initial launch
 # Rate-My-PSU
