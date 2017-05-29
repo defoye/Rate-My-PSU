@@ -6,6 +6,10 @@ var timeout = 0;
 var fresh = true;
 var myFontSize;
 
+/*
+ * Working on calling functions on button click rather than constantly
+ * checking the DOM for modification
+ */
 function attachClick() {
 
     var iframe = $('#ptifrmtgtframe').contents();
@@ -40,14 +44,19 @@ function callback() {
     timeout = setTimeout(myAwesomeFunction, 100);
 }
 
+/*
+ * Removes and attaches event as necessary.  This ensures that the
+ * functions run when they are supposed to(when the page contains
+ * professor names)
+ */
 function myAwesomeFunction() {
 
     var iframe = $('#ptifrmtgtframe').contents();
     var iframeBody = iframe.find("body");
-    //some code
+
     if(iframeBody.find('[id^="MTG_INSTR$"]').length) {
 
-        htmlDocument.removeEventListener("DOMSubtreeModified", callback); //remove event
+        htmlDocument.removeEventListener("DOMSubtreeModified", callback);
 
         var el = htmlDocument.getElementById('MTG_INSTR$0');
         var style = window.getComputedStyle(el, null).getPropertyValue('font-size');
@@ -55,17 +64,18 @@ function myAwesomeFunction() {
         myFontSize = fontSize + 'px';
 
         if(fresh) {
+            // ensure all are empty
             names = [];
             ratings = [];
             ratingSpans = [];
-            addPretties();
+            addComponents();
             getProfessorNames();
             fresh = false;
         }
 
-        addDosRatings();
+        addRatings();
 
-        htmlDocument.addEventListener("DOMSubtreeModified", callback); //re attach event
+        htmlDocument.addEventListener("DOMSubtreeModified", callback);
     }
     else {
 
@@ -73,14 +83,14 @@ function myAwesomeFunction() {
     }
 }
 
-function addDosRatings() {
+function addRatings() {
   for(var i = 0; i < ratingSpans.length; i++) {
-    addDatRating(i);
+    addRating(i);
   }
 }
 
 /* Creates columns and adds "Rating" and loading gif */
-function addPretties() {
+function addComponents() {
 
     var iframe = $('#ptifrmtgtframe').contents();
     var iframeBody = iframe.find("body");
@@ -152,18 +162,6 @@ function getOverallScore(profIndex, profName, profLink) {
         method: "POST",
         url: "http://www.ratemyprofessors.com" + profLink
     }, function(response) {
-        // if (!names[profIndex].text().includes(" - ")) {
-        //     // Ignore requests with no ratings
-        //     if (names[profIndex].text() === "Staff" || response.profRating == "0.0" || response.profRating.includes("Grade Received")) {
-        //         ratings[profIndex] = "N/A";
-        //     } else {
-        //         ratings[profIndex] = response.profRating;
-        //         //names[profIndex].style.color = getColor(parseFloat(response.profRating));
-        //     }
-        //
-        //     addDatRating(profIndex);
-        // }
-        // Ignore requests with no ratings
         if (names[profIndex].text() === "Staff" || response.profRating == "0.0" || response.profRating.includes("Grade Received")) {
             ratings[profIndex] = "N/A";
         } else {
@@ -171,11 +169,11 @@ function getOverallScore(profIndex, profName, profLink) {
             //names[profIndex].style.color = getColor(parseFloat(response.profRating));
         }
 
-        addDatRating(profIndex, profLink);
+        addRating(profIndex, profLink);
     });
 }
 
-function addDatRating(index, profLink) {
+function addRating(index, profLink) {
 
     if (typeof ratings[index] != 'undefined') {
         ratingSpans[index].innerHTML = '<center><span class="RMP_Rating" ng-style="{\'background-color\': getColor(parseFloat(ratings[index]))}">' + ratings[index] + '</span></center>';
