@@ -20,4 +20,4 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-Phil Davidson icon from https://saturnsrepository.files.wordpress.com/2013/06/phil-davison.png
+Loading gif from https://2aih25gkk2pi65s8wfa8kzvi-wpengine.netdna-ssl.com/toefl/wp-content/plugins/magoosh-lazyload-comments-better-ui/assets/img/loading.gif
