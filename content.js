@@ -44,14 +44,14 @@ function callback() {
     if (timeout) {
         clearTimeout(timeout);
     }
-    timeout = setTimeout(myAwesomeFunction, 1000);
+    timeout = setTimeout(addProfessors, 1000);
 }
 /*
  * Removes and attaches event as necessary.  This ensures that the
  * functions run when they are supposed to(when the page contains
  * professor names)
  */
-function myAwesomeFunction() {
+function addProfessors() {
 
     var iframe = $('#ptifrmtgtframe').contents();
     var iframeBody = iframe.find("body");
