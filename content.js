@@ -4,8 +4,11 @@ var ratingSpans = [];
 var htmlDocument;
 var timeout = 0;
 var fresh = true;
+var professorURLS = [];
+var componentsAdded = false;
 var myFontSize;
-
+const BLANK = "_blank";
+//
 /*
  * Working on calling functions on button click rather than constantly
  * checking the DOM for modification
@@ -41,9 +44,8 @@ function callback() {
     if (timeout) {
         clearTimeout(timeout);
     }
-    timeout = setTimeout(myAwesomeFunction, 100);
+    timeout = setTimeout(myAwesomeFunction, 1000);
 }
-
 /*
  * Removes and attaches event as necessary.  This ensures that the
  * functions run when they are supposed to(when the page contains
@@ -54,36 +56,52 @@ function myAwesomeFunction() {
     var iframe = $('#ptifrmtgtframe').contents();
     var iframeBody = iframe.find("body");
 
-    if(iframeBody.find('[id^="MTG_INSTR$"]').length) {
+    if(iframeBody.find('[id^="INSTRUCT_MODE_DESCR"]').length) {
+        componentsAdded = false;
+    } else if(iframeBody.find('[id^="MTG_INSTR$"]').length) {
 
+        // Remove the listener while it's being modified
         htmlDocument.removeEventListener("DOMSubtreeModified", callback);
 
         var el = htmlDocument.getElementById('MTG_INSTR$0');
         var style = window.getComputedStyle(el, null).getPropertyValue('font-size');
         var fontSize = parseFloat(style) + 1;
         myFontSize = fontSize + 'px';
+        //console.log("professors here");
 
         if(fresh) {
             // ensure all are empty
-            names = [];
-            ratings = [];
-            ratingSpans = [];
-            addComponents();
+            //if(!sameProfessors()) {
+                names = [];
+                ratings = [];
+                ratingSpans = [];
+                professorURLS = [];
+            //}
             getProfessorNames();
             fresh = false;
+        }// class details
+
+        if(!componentsAdded) {
+            //window.alert("add components");
+            ratingSpans = [];
+            addComponents();
+            componentsAdded = true;
         }
 
         addRatings();
 
+        // console.log(names.size);
+
         htmlDocument.addEventListener("DOMSubtreeModified", callback);
     }
     else {
-
+        componentsAdded = false;
         fresh = true;
     }
 }
 
 function addRatings() {
+  //console.log("rating length" + ratingSpans.length);
   for(var i = 0; i < ratingSpans.length; i++) {
     addRating(i);
   }
@@ -109,6 +127,17 @@ function addComponents() {
     });
 }
 
+function sameProfessors() {
+
+    var iframe = $('#ptifrmtgtframe').contents();
+    var iframeBody = iframe.find("body");
+    var i = 0;
+    iframeBody.contents().find('span[id^="MTG_INSTR$"]').each(function(i, obj) {
+        if(names[i] != $(this)) return false;
+        else return true;
+    });
+}
+
 function getProfessorNames() {
 
     var iframe = $('#ptifrmtgtframe').contents();
@@ -118,7 +147,10 @@ function getProfessorNames() {
         names.push($(this));
         searchForProfessor(i);
         i++;
+        console.log(i);
+
     });
+    console.log(i);
 }
 
 /**
@@ -127,15 +159,21 @@ function getProfessorNames() {
  */
 function searchForProfessor(profIndex) {
     var profName = names[profIndex].text();
+
     chrome.runtime.sendMessage({
         action: "searchForProfessor",
         method: "POST",
         url: "http://www.ratemyprofessors.com/search.jsp?queryoption=HEADER&queryBy=teacherName&schoolName=Pennsylvania+State+University&schoolID=4002&query=" + convertName(profName)
     }, function(response) {
         if (response.profLink != null) {
+            //professorURLS[profIndex] = "http://www.ratemyprofessors.com/search.jsp?queryoption=HEADER&queryBy=teacherName&schoolName=Pennsylvania+State+University&schoolID=4002&query=" + convertName(profName);
+            // professorURLS[profIndex] = "https://www.ratemyprofessors.com" + response.profLink;
+            professorURLS.push("https://www.ratemyprofessors.com" + response.profLink);
             getOverallScore(profIndex, profName, response.profLink);
         } else {
             ratings[profIndex] = "N/A";
+            // professorURLS[profIndex] = "none";
+            professorURLS.push("none");
         }
     });
 }
@@ -151,12 +189,14 @@ function convertName(original) {
 
     return converted.replace(", ", "%2C+");
 }
+var count = 0;
 
 /**
  * Builds on searchForProfessor, visits the URL
  * and returns the overall rating for that professor
  */
 function getOverallScore(profIndex, profName, profLink) {
+
     chrome.runtime.sendMessage({
         action: "getOverallScore",
         method: "POST",
@@ -168,7 +208,7 @@ function getOverallScore(profIndex, profName, profLink) {
             ratings[profIndex] = response.profRating;
             //names[profIndex].style.color = getColor(parseFloat(response.profRating));
         }
-
+        //professorURLS[profIndex] = "https://www.ratemyprofessors.com" + profLink;
         addRating(profIndex, profLink);
     });
 }
@@ -176,9 +216,18 @@ function getOverallScore(profIndex, profName, profLink) {
 function addRating(index, profLink) {
 
     if (typeof ratings[index] != 'undefined') {
-        ratingSpans[index].innerHTML = '<center><span class="RMP_Rating" ng-style="{\'background-color\': getColor(parseFloat(ratings[index]))}">' + ratings[index] + '</span></center>';
+        //console.log(professorURLS[index]);
+        // var theURL = professorURLS[index];
+        // var theURL = "https://www.ratemyprofessors.com" + profLink;
+        var theURL = professorURLS[index];
+        // console.log(u);
+        if(theURL === "none") ratingSpans[index].innerHTML = '<center><span class="RMP_Rating" ng-style="{\'background-color\': getColor(parseFloat(ratings[index]))}">' + ratings[index] + '</span></center>';
+        else ratingSpans[index].innerHTML = '<center><a href="' + theURL + '" target="' + BLANK + '" ng-style="{\'background-color\': getColor(parseFloat(ratings[index]))}">' + ratings[index] + '</a></center>';
+
         ratingSpans[index].style.backgroundColor = getColor(parseFloat(ratings[index]));
         ratingSpans[index].style.fontSize = myFontSize;
+
+        //document.getElementById('theURL').href = theURL;
         //ratingSpans
     }
 }
